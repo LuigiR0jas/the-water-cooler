@@ -1,0 +1,28 @@
+{
+  "name": "the-water-cooler",
+  "version": "1.0.0",
+  "description": "the-water-cooler",
+  "main": "server.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuigiR0jas/the-water-cooler.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LuigiR0jas/the-water-cooler/issues"
+  },
+  "homepage": "https://github.com/LuigiR0jas/the-water-cooler#readme",
+  "dependencies": {
+    "cors": "^2.8.1",
+    "express": "^4.14.0",
+    "morgan": "^1.7.0",
+    "serve-favicon": "^2.3.2"
+  }
+}
