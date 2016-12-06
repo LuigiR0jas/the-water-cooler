@@ -24,7 +24,7 @@ Marcos:
 
 #Requerimientos opcionales:
 Luigi:
--Busqueda
+-Busqueda******
 
 Marcos:
 -Actualización de los gossip con Workers

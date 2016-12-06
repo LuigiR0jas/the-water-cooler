@@ -1,3 +1,6 @@
+//Homepage JS Controller
+//----------------------------------------------------------------------Global Variables------------------------------------------------------------------------
+
 var gossipSpawner = document.getElementById('gossipSpawner'),
     EnterAsUserButtonM = document.getElementById('EnterAsUserButtonM'),
     gossipText = document.getElementById('gossipText'),
@@ -9,12 +12,21 @@ var gossipSpawner = document.getElementById('gossipSpawner'),
     banner, progress, indeterminate, lel,
     black = false;
 
+// -------------------------------------------------------------------Initial Functions--------------------------------------------------------------
+
+//Materialize JQuery Modal initialization
 $(document).ready(function() {
     $('.modal-trigger').leanModal();
 });
 
 function getUser() {
     return ls.getItem('username');
+}
+
+function userChip() {
+    var chip = document.getElementById("userChip"),
+        user = getUser();
+    chip.innerHTML = user;
 }
 
 function startProgress() {
@@ -30,7 +42,9 @@ function startProgress() {
 function stopProgress() {
     progress.style.display = "none";
 }
-//--------------------------------------------XHR functions --------------------------------------------------------------------
+
+//------------------------------------------------------------------------XHR functions --------------------------------------------------------------------
+
 function getAllGossips() {
     startProgress();
     let XHR = new XMLHttpRequest();
@@ -41,6 +55,7 @@ function getAllGossips() {
         let getAllResponse = JSON.parse(res.target.response);
         GossipArray = (getAllResponse.gossips)
         render(GossipArray);
+        console.log(GossipArray);
     }
 }
 
@@ -53,7 +68,9 @@ function eraseGossipSelf(id, user) {
         deleteResponse = JSON.parse(res.target.response);
         if (deleteResponse.status == 200) {
             let cardId = ["Card", id, user].join("_"),
-                gossipCardo = document.getElementById(cardId);
+                gossipCardo = document.getElementById(cardId),
+                index = getIndexOfGossip(id);
+            GossipArray.splice(index, 1);
             gossipCardo.style.display = "none";
             Materialize.toast(deleteResponse.message, 2000);
         } else {
@@ -80,18 +97,103 @@ function createGossip() {
         XHR.send(JSON.stringify(params));
         XHR.onload = function(res) {
             let createResponse = JSON.parse(res.target.response);
-            console.log(createResponse);
             newGossip = createResponse.gossip;
-            console.log(newGossip);
             renderOne(newGossip);
+            GossipArray.push(newGossip)
             Materialize.toast(createResponse.message, 2000);
         }
     }
 }
 publishGossipBtn.onclick = createGossip;
 
+//----------------------------------------------------------------------Various functions-------------------------------------------------------------------------
 
-//------------------------------------------------------------Buttons functions--------------------------------------------------
+
+function searching(){
+    
+    if (document.searchForm.SearchUserCheckbox.checked) {
+        if (document.searchForm.SearchUserInput.value != '') {
+
+        }
+    }
+
+}
+
+function searchGossipByUsername(username){
+    var regex = new RegExp(username, "ig"),
+        searchResult = [],
+        j = 0;
+
+    for (var i = 0; i < GossipArray.length; i++) {
+        if (regex.test(GossipArray[i].id_usuario)) {
+            searchResult[j] = GossipArray[i];
+            j++;
+        }
+    };
+    if (searchResult.length > 0) {
+
+        render(searchResult);
+        Materialize.toast("here it is", 2000);
+    } else {
+        Materialize.toast("Nothing was found", 2000);
+    }
+}
+
+function searchGossipByContent(content){
+    var regex = new RegExp(content, "ig"),
+        searchResult = [],
+        j = 0;
+
+    for (var i = 0; i < GossipArray.length; i++) {
+        if (regex.test(GossipArray[i].de_gossip)) {
+            searchResult[j] = GossipArray[i];
+            j++;
+        }
+    };
+    if (searchResult.length > 0) {
+
+        render(searchResult);
+        Materialize.toast("Here it is", 2000);
+    } else {
+        Materialize.toast("Nothing was found", 2000);
+    }
+}
+
+function searchGossipByKarma(arg){
+    var searchResult = [],
+        j = 0;
+
+    if (arg == 'pos') {
+        for (var i = 0; i < GossipArray.length; i++) {
+            if (GossipArray[i].ka_gossip > 0) {
+                searchResult[j] = GossipArray[i];
+                j++;
+            }
+        };
+
+    } else if (arg == 'neg'){
+        for (var i = 0; i < GossipArray.length; i++) {
+            if (GossipArray[i].ka_gossip < 0) {
+                searchResult[j] = GossipArray[i];
+                j++;
+            }
+        };
+
+    } else {
+        for (var i = 0; i < GossipArray.length; i++) {
+            if (GossipArray[i].ka_gossip == 0) {
+                searchResult[j] = GossipArray[i];
+                j++;
+            }
+        };
+    }
+    if (searchResult.length > 0) {
+        Materialize.toast("Here it is", 2000);
+        render(searchResult);
+    } else {
+        Materialize.toast("Nothing was found", 2000);
+    }
+}
 
 function getGossipUser(id) {
     for (var i = 0; i < GossipArray.length; i++) {
@@ -101,11 +203,32 @@ function getGossipUser(id) {
     }
 }
 
-function enterAsAnotherUser() {
-    ls.removeItem('username');
-    window.location.assign("/");
+function getIndexOfGossip(id) {
+    for (var i = 0; i < GossipArray.length; i++) {
+        if (GossipArray[i].id_gossip == id) {
+            return i;
+        }
+    }
 }
-EnterAsAnotherUserButtonM.onclick = enterAsAnotherUser;
+
+function checkIfUserGossip() {
+    let idArr = this.id.split("_");
+    if (ls.getItem('username') == idArr[2]) {
+        eraseGossipSelf(idArr[1], idArr[2]);
+    } else {
+        Materialize.toast("Nice try. That's not your gossip, pal.", 2000);
+    }
+}
+
+function render(gossip) {
+    gossipSpawner.innerHTML =　'';
+    for (var i = 0; i < gossip.length; i++) {
+        renderOne(gossip[i]);
+        if (i < gossip.length) {
+            stopProgress();
+        }
+    }
+}
 
 function renderOne(gossip) {
     var cardColor,
@@ -186,28 +309,20 @@ function renderOne(gossip) {
     cardContent.appendChild(divRow);
     cardContent.appendChild(gossipContent);
     gossipCard.appendChild(cardContent);
-    gossipSpawner.appendChild(gossipCard);
     gossipCard.appendChild(cardAction)
+    gossipSpawner.appendChild(gossipCard);
 
 }
 
-function render(gossip) {
-    for (var i = 0; i < gossip.length; i++) {
-        renderOne(gossip[i]);
-        if (i < gossip.length) {
-            stopProgress();
-        }
-    }
-}
+//-------------------------------------------------------------------------Button functions-----------------------------------------------------------------------
 
-function checkIfUserGossip() {
-    let idArr = this.id.split("_");
-    if (ls.getItem('username') == idArr[2]) {
-        eraseGossipSelf(idArr[1], idArr[2]);
-    } else {
-        Materialize.toast("Nice try. That's not your gossip, pal.", 2000);
-    }
+function enterAsAnotherUser() {
+    ls.removeItem('username');
+    window.location.assign("/");
 }
+EnterAsAnotherUserButtonM.onclick = enterAsAnotherUser;
 
+//-------------------------------------------------------------------------Main Thread----------------------------------------------------------------------------
 
 getAllGossips();
+userChip();

@@ -27,10 +27,14 @@
 
 <body>
     <header>
-        <div id="banner" class="container center">
-            <h1 class="center" style="font-family: 'pacifico', cursive; font-size: 60px">The Water Cooler</h1>
-            <img class="responsive-img" src="assets/img/logo.jpg" />
-            <h6 class="center" style="font-family: 'pacifico', cursive; font-size: 20px">Free Gossips for horrible people</h6>
+        <div class="chip z-depth-1" style="position: fixed; z-index:1">
+            <a class="material-icons left-align">account_circle</a>
+            <a class="right-align" id="userChip"></a>
+        </div>
+        <div name="top" id="banner" class="container center">
+            <h1 href="/home" class="center" style="font-family: 'pacifico', cursive; font-size: 60px">The Water Cooler</h1>
+            <img href="/home" class="responsive-img" src="assets/img/logo.jpg" />
+            <h6 class="center" style="font-family: 'pacifico', cursive; font-size: 20px">Gossips for horrible people</h6>
             <div class="divider"></div>
         </div>
     </header>
@@ -68,7 +72,7 @@
             </ul>
         </div>
         <!--==========================================================Modals Structure ============================================-->
-        <div id="modal1" class="modal modal-fixed-footer">
+        <div id="modal1" class="modal">
             <div class="modal-content">
                 <h4>"Hey, someone told me you knew about 'that' thing..."</h4>
                 <div class="container">
@@ -87,12 +91,50 @@
         </div>
         <div id="modal2" class="modal modal-fixed-footer">
             <div class="modal-content">
-                <h4>Modal Header2</h4>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
-                    aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <h4>Search by:</h4>
+                <div class="container">
+                    <div class="section">
+                        <form name="searchForm" onsubmit="">
+                            <div class="input-field left-align">
+                                <h5>Username</h5>
+                                <input name="SearchUserCheckbox" type="checkbox" id="SearchUserCheckbox" />
+                                <label for="SearchUserCheckbox"></label>
+                                <i class="material-icons prefix">account_circle</i>
+                                <input name="SearchUserInput" type="text" />
+                            </div>
+
+                            <div class="input-field left-align">
+                                <h5>Gossip Content</h5>
+                                <input name="SearchContentCheckbox" type="checkbox" id="SearchContentCheckbox" />
+                                <label for="SearchContentCheckbox"></label>
+                                <i class="material-icons prefix">mode_edit</i>
+                                <input name="SearchContentInput" type="text" />
+                            </div>
+
+                            <h5>Karma</h5>
+                            <input name="SearchKarmaCheckbox" type="checkbox" id="SearchKarmaCheckbox" />
+                            <label for="SearchKarmaCheckbox"></label>
+                            <p>
+                                <input name="group1" type="radio" id="SearchPosKarma" />
+                                <label for="SearchPosKarma">Positive</label>
+                            </p>
+                            <p>
+                                <input name="group1" type="radio" id="SearchNegKarma" />
+                                <label for="SearchNegKarma">Negative</label>
+                            </p>
+                            <p>
+                                <input name="group1" type="radio" id="SearchNeutralKarma" />
+                                <label for="SearchNeutralKarma">Neutral</label>
+                            </p>
+                        </form>
+                    </div>
+                </div>
             </div>
+
             <div class="modal-footer">
-                <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+                <a onclick="javascript: searching();" class=" modal-action modal-close waves-effect waves-green btn-flat">Search</a>
+                <a class=" modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a class=" modal-action waves-effect waves-green btn-flat left">Clear</a>
             </div>
         </div>
         <div id="modal3" class="modal modal-fixed-footer">
