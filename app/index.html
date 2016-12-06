@@ -17,7 +17,7 @@
     <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
 
     <!--Import Main JS-->
-    <script src="js/app.js" async defer></script>
+    <script src="js/indexController.js" async defer></script>
 
     <title>The Water Cooler - Free gossips for horrible people</title>
 </head>
@@ -57,11 +57,11 @@
             <div class="container">
                 <div class="section row center">
                     <div class="input-field col center">
-                        <input class="black-text" id="username" type="text">
+                        <input class="black-text" id="usernameInput" type="text">
                         <label class="light black-text" for="username">"Hey...</label>
                         <p class="right light black-text">...did you hear?"</p>
                         <div class="section row">
-                            <a class="btn-large waves-effect cyan" href="/index">"I have not. Tell me!"</a>
+                            <a id ="setUserButton" class="btn-large waves-effect cyan">"I have not. Tell me!"</a>
                         </div>
                     </div>
                 </div>

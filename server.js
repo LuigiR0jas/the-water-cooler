@@ -27,11 +27,11 @@ app.use(favicon(__dirname + '/app/assets/favicon.ico'));
 
 //We define a homepage, a file we are going to send our clients should they ask for our root route.
 app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname + '/app/welcomepage.html'));
+    res.sendFile(path.join(__dirname + '/app/index.html'));
 });
 
-app.get('/index', function(req, res) {
-    res.sendFile(path.join(__dirname + '/app/fuck.html'));
+app.get('/home', function(req, res) {
+    res.sendFile(path.join(__dirname + '/app/home.html'));
 });
 
 //We tell our express app which port we're going to work with.
