@@ -59,6 +59,20 @@ function getAllGossips() {
     }
 }
 
+function getAllAsAdmin(){
+    startProgress();
+    let XHR = new XMLHttpRequest();
+    let url = serverUrl + '/gossip/all';
+    XHR.open('get', url, 'true');
+    XHR.send();
+    XHR.onload = function(res) {
+        let getAllResponse = JSON.parse(res.target.response);
+        GossipArray = (getAllResponse.gossips)
+        render(GossipArray);
+        console.log(GossipArray);
+    }
+}
+
 function eraseGossipSelf(id, user) {
     let XHR = new XMLHttpRequest();
     let url = serverUrl + '/gossip/delete?id_gossip=' + id + '&id_usuario=' + user;
@@ -109,18 +123,109 @@ publishGossipBtn.onclick = createGossip;
 //----------------------------------------------------------------------Various functions-------------------------------------------------------------------------
 
 
-function searching(){
-    
+function searching() {
+    let userSearchResult = [],
+        contentSearchResult = [],
+        karmaSearchResult = [];
+
     if (document.searchForm.SearchUserCheckbox.checked) {
         if (document.searchForm.SearchUserInput.value != '') {
+            let user = document.searchForm.SearchUserInput.value;
+            userSearchResult = searchGossipByUsername(user);
+            console.log("searching for: ", user, " and found:", userSearchResult);
+        } else {
 
         }
+    };
+    if (document.searchForm.SearchContentCheckbox.checked) {
+        if (document.searchForm.SearchContentInput.value != '') {
+            let content = document.searchForm.SearchContentInput.value;
+            contentSearchResult = searchGossipByContent(content);
+            console.log("searching for: ", content, " and found:", contentSearchResult);
+        } else {
+
+        }
+    };
+    if (document.searchForm.SearchKarmaCheckbox.checked) {
+        for (var i = 0; i < document.searchForm.group1.length; i++) {
+            if (document.searchForm.group1[i].checked) {
+                let karma = document.searchForm.group1[i].id;
+                karmaSearchResult = searchGossipByKarma(karma);
+                console.log("searching for: ", karma, " and found:", karmaSearchResult);
+            } else {
+
+            }
+        }
+    };
+
+    let preliminarArray = [userSearchResult, contentSearchResult, karmaSearchResult],
+        resultArray = [],
+        isEqual = 0,
+        calls = 0;
+    console.log(preliminarArray);
+
+    for (var i = 0; i < preliminarArray.length; i++) {
+        if (preliminarArray[i].length != 0) {
+            calls++;
+            // console.log(calls);
+        }
+    }
+    if (calls == 1) {
+        if (preliminarArray[0].length != 0) {
+            for (var k = 0; k < preliminarArray[0].length; k++) {
+                // console.log(preliminarArray[0][k]);
+                resultArray[k] = preliminarArray[0][k];
+            }
+        } else if (preliminarArray[1].length != 0) {
+            for (var k = 0; k < preliminarArray[1].length; k++) {
+                // console.log(preliminarArray[0][k]);
+                resultArray[k] = preliminarArray[1][k];
+            }
+        } else if (preliminarArray[2].length != 0) {
+            for (var k = 0; k < preliminarArray[2].length; k++) {
+                // console.log(preliminarArray[0][k]);
+                resultArray[k] = preliminarArray[2][k];
+            }
+        }
+        console.log(resultArray);
+        render(resultArray)
+    } else {
+        for (var i = 0; i < preliminarArray.length; i++) {
+            for (var k = 0; k < preliminarArray[i].length; k++) {
+                console.log(preliminarArray[i].length);
+                resultArray[resultArray.length] = preliminarArray[i][k];
+            }
+        }
+        var obj = {};
+        for (var i = 0, j = resultArray.length; i < j; i++) {
+            obj[resultArray[i].id_gossip] = (obj[resultArray[i].id_gossip] || 0) + 1;
+        }
+        // console.log(obj);
+        var count = 0;
+        var i;
+        for (i in obj) {
+            if (obj.hasOwnProperty(i)) {
+                count++;
+            }
+        }
+        // console.log(count);
+        var fuckingFinal = [];
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                // console.log(key, obj[key]);
+                if (obj[key] == calls) {
+                    fuckingFinal.push(getGossipByID(key))
+                }
+            }
+        }
+        console.log(fuckingFinal);
+        render(fuckingFinal);
     }
 
 }
 
-function searchGossipByUsername(username){
-    var regex = new RegExp(username, "ig"),
+function searchGossipByUsername(username) {
+    var regex = new RegExp(username, "i"),
         searchResult = [],
         j = 0;
 
@@ -129,18 +234,14 @@ function searchGossipByUsername(username){
             searchResult[j] = GossipArray[i];
             j++;
         }
+        console.log(regex.test(GossipArray[i].id_usuario));
     };
-    if (searchResult.length > 0) {
-
-        render(searchResult);
-        Materialize.toast("here it is", 2000);
-    } else {
-        Materialize.toast("Nothing was found", 2000);
-    }
+    console.log("search result ", searchResult);
+    return searchResult;
 }
 
-function searchGossipByContent(content){
-    var regex = new RegExp(content, "ig"),
+function searchGossipByContent(content) {
+    var regex = new RegExp(content, "i"),
         searchResult = [],
         j = 0;
 
@@ -150,16 +251,10 @@ function searchGossipByContent(content){
             j++;
         }
     };
-    if (searchResult.length > 0) {
-
-        render(searchResult);
-        Materialize.toast("Here it is", 2000);
-    } else {
-        Materialize.toast("Nothing was found", 2000);
-    }
+    return searchResult;
 }
 
-function searchGossipByKarma(arg){
+function searchGossipByKarma(arg) {
     var searchResult = [],
         j = 0;
 
@@ -169,30 +264,23 @@ function searchGossipByKarma(arg){
                 searchResult[j] = GossipArray[i];
                 j++;
             }
-        };
-
-    } else if (arg == 'neg'){
+        }
+    } else if (arg == 'neg') {
         for (var i = 0; i < GossipArray.length; i++) {
             if (GossipArray[i].ka_gossip < 0) {
                 searchResult[j] = GossipArray[i];
                 j++;
             }
-        };
-
+        }
     } else {
         for (var i = 0; i < GossipArray.length; i++) {
             if (GossipArray[i].ka_gossip == 0) {
                 searchResult[j] = GossipArray[i];
                 j++;
             }
-        };
-    }
-    if (searchResult.length > 0) {
-        Materialize.toast("Here it is", 2000);
-        render(searchResult);
-    } else {
-        Materialize.toast("Nothing was found", 2000);
-    }
+        }
+    };
+    return searchResult;
 }
 
 function getGossipUser(id) {
@@ -220,8 +308,16 @@ function checkIfUserGossip() {
     }
 }
 
+function getGossipByID(id){
+    for (var i = 0; i < GossipArray.length; i++) {
+        if (GossipArray[i].id_gossip == id) {
+            return GossipArray[i];
+        }
+    }
+}
+
 function render(gossip) {
-    gossipSpawner.innerHTML =　'';
+    gossipSpawner.innerHTML = 　'';
     for (var i = 0; i < gossip.length; i++) {
         renderOne(gossip[i]);
         if (i < gossip.length) {
@@ -252,7 +348,7 @@ function renderOne(gossip) {
 
     } else if (gossip.ka_gossip < 0) {
         karmaColor = "red";
-        karmaSign = "-";
+        karmaSign = "";
 
     } else if (gossip.ka_gossip == 0) {
         karmaColor = "grey darken-4";

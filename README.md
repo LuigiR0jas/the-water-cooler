@@ -24,7 +24,7 @@ Marcos:
 
 #Requerimientos opcionales:
 Luigi:
--Busqueda******
+<!-- -Busqueda FUCK YEAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH-->
 
 Marcos:
 -Actualización de los gossip con Workers
