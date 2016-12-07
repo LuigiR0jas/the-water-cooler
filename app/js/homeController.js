@@ -3,6 +3,7 @@
 
 var gossipSpawner = document.getElementById('gossipSpawner'),
     EnterAsUserButtonM = document.getElementById('EnterAsUserButtonM'),
+    EnterAsAdminButtonM = document.getElementById('EnterAsAdminButtonM'),
     gossipText = document.getElementById('gossipText'),
     publishGossipBtn = document.getElementById('PublishGossipBtn'),
     ls = window.localStorage,
@@ -28,7 +29,7 @@ function checkIfAdmin() {
     return ls.getItem('adminCredentials');
 }
 
-function getAdmin(){
+function getAdmin() {
     var arr = ls.getItem('adminCredentials');
     var name = arr.split(",");
     return name[0];
@@ -76,7 +77,7 @@ function getAllGossips() {
     }
 }
 
-function getAllAsAdmin(){
+function getAllAsAdmin() {
     startProgress();
     let XHR = new XMLHttpRequest();
     let url = serverUrl + '/admin/gossip/all';
@@ -130,7 +131,11 @@ function createGossip() {
             let createResponse = JSON.parse(res.target.response);
             newGossip = createResponse.gossip;
             renderOne(newGossip);
-            GossipArray.push(newGossip)
+            if (checkIfAdmin) {
+                AdminGossipArray.push(newGossip)
+            } else {
+                GossipArray.push(newGossip)
+            }
             Materialize.toast(createResponse.message, 2000);
         }
     }
@@ -139,7 +144,22 @@ publishGossipBtn.onclick = createGossip;
 
 //----------------------------------------------------------------------Various functions-------------------------------------------------------------------------
 
+function buttonsRenders(){
+    if (checkIfAdmin()) {
+        var EnterAsAnotherUserButtonM = document.getElementById('EnterAsAnotherUserButtonM'),
+        EnterAsAdminButtonM = document.getElementById('EnterAsAdminButtonM');
 
+        EnterAsAnotherUserButtonM.style.display="none";
+        EnterAsAdminButtonM.style.display="none"
+
+    } else {
+        var ReadLogsButtonM = document.getElementById('ReadLogsButtonM'),
+        EnterAsUserButtonM = document.getElementById('EnterAsUserButtonM');
+
+        ReadLogsButtonM.style.display="none";
+        EnterAsUserButtonM.style.display="none";
+    }
+}
 function searching() {
     let userSearchResult = [],
         contentSearchResult = [],
@@ -245,13 +265,17 @@ function searchGossipByUsername(username) {
     var regex = new RegExp(username, "i"),
         searchResult = [],
         j = 0;
-
-    for (var i = 0; i < GossipArray.length; i++) {
-        if (regex.test(GossipArray[i].id_usuario)) {
-            searchResult[j] = GossipArray[i];
+    if (checkIfAdmin()) {
+        var arr = AdminGossipArray;
+    } else {
+        var arr = GossipArray;
+    }
+    for (var i = 0; i < arr.length; i++) {
+        if (regex.test(arr[i].id_usuario)) {
+            searchResult[j] = arr[i];
             j++;
         }
-        console.log(regex.test(GossipArray[i].id_usuario));
+        console.log(regex.test(arr[i].id_usuario));
     };
     console.log("search result ", searchResult);
     return searchResult;
@@ -261,10 +285,15 @@ function searchGossipByContent(content) {
     var regex = new RegExp(content, "i"),
         searchResult = [],
         j = 0;
+    if (checkIfAdmin()) {
+        var arr = AdminGossipArray;
+    } else {
+        var arr = GossipArray;
+    }
 
-    for (var i = 0; i < GossipArray.length; i++) {
-        if (regex.test(GossipArray[i].de_gossip)) {
-            searchResult[j] = GossipArray[i];
+    for (var i = 0; i < arr.length; i++) {
+        if (regex.test(arr[i].de_gossip)) {
+            searchResult[j] = arr[i];
             j++;
         }
     };
@@ -274,25 +303,30 @@ function searchGossipByContent(content) {
 function searchGossipByKarma(arg) {
     var searchResult = [],
         j = 0;
+    if (checkIfAdmin()) {
+        var arr = AdminGossipArray;
+    } else {
+        var arr = GossipArray;
+    }
 
     if (arg == 'pos') {
-        for (var i = 0; i < GossipArray.length; i++) {
-            if (GossipArray[i].ka_gossip > 0) {
-                searchResult[j] = GossipArray[i];
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].ka_gossip > 0) {
+                searchResult[j] = arr[i];
                 j++;
             }
         }
     } else if (arg == 'neg') {
-        for (var i = 0; i < GossipArray.length; i++) {
-            if (GossipArray[i].ka_gossip < 0) {
-                searchResult[j] = GossipArray[i];
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].ka_gossip < 0) {
+                searchResult[j] = arr[i];
                 j++;
             }
         }
     } else {
-        for (var i = 0; i < GossipArray.length; i++) {
-            if (GossipArray[i].ka_gossip == 0) {
-                searchResult[j] = GossipArray[i];
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].ka_gossip == 0) {
+                searchResult[j] = arr[i];
                 j++;
             }
         }
@@ -325,10 +359,16 @@ function checkIfUserGossip() {
     }
 }
 
-function getGossipByID(id){
-    for (var i = 0; i < GossipArray.length; i++) {
-        if (GossipArray[i].id_gossip == id) {
-            return GossipArray[i];
+function getGossipByID(id) {
+    if (checkIfAdmin()) {
+        var arr = AdminGossipArray;
+    } else {
+        var arr = GossipArray;
+    }
+
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].id_gossip == id) {
+            return arr[i];
         }
     }
 }
@@ -350,7 +390,7 @@ function renderOne(gossip) {
         karmaSign,
         status = " ";
     if (checkIfAdmin()) {
-        if (gossip.id_gossip_status == 0){
+        if (gossip.id_gossip_status == 0) {
             status = "(Eliminado)";
         }
     }
@@ -423,7 +463,6 @@ function renderOne(gossip) {
     chip.className = "chip " + karmaColor + " white-text";
     chip.innerHTML = karmaSign + gossip.ka_gossip;
 
-
     cardAction.appendChild(posKarma);
     cardAction.appendChild(negKarma);
     cardAction.appendChild(chip);
@@ -448,15 +487,19 @@ function enterAsAnotherUser() {
     window.location.assign("/");
 }
 EnterAsAnotherUserButtonM.onclick = enterAsAnotherUser;
+EnterAsUserButtonM.onclick = enterAsAnotherUser;
 
-function enterAsAdmin(){
+function enterAsAdmin() {
     ls.removeItem('username');
     window.location.assign("/admin")
 }
+EnterAsAdminButtonM.onclick = enterAsAdmin;
+
+
 
 //-------------------------------------------------------------------------Main Thread----------------------------------------------------------------------------
 
-function init(){
+function init() {
     if (checkIfAdmin()) {
         getAllAsAdmin();
         adminChip();
@@ -464,5 +507,6 @@ function init(){
         getAllGossips();
         userChip();
     }
+    buttonsRenders();
 }
 init();
