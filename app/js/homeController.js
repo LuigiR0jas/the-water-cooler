@@ -9,6 +9,7 @@ var gossipSpawner = document.getElementById('gossipSpawner'),
     ss = window.sessionStorage,
     serverUrl = 'http://gossip-app.herokuapp.com',
     GossipArray = [],
+    AdminGossipArray = [],
     banner, progress, indeterminate, lel,
     black = false;
 
@@ -23,10 +24,26 @@ function getUser() {
     return ls.getItem('username');
 }
 
+function checkIfAdmin() {
+    return ls.getItem('adminCredentials');
+}
+
+function getAdmin(){
+    var arr = ls.getItem('adminCredentials');
+    var name = arr.split(",");
+    return name[0];
+}
+
 function userChip() {
     var chip = document.getElementById("userChip"),
         user = getUser();
     chip.innerHTML = user;
+}
+
+function adminChip() {
+    var chip = document.getElementById("userChip"),
+        user = getAdmin();
+    chip.innerHTML = user + " (Admin)";
 }
 
 function startProgress() {
@@ -62,14 +79,14 @@ function getAllGossips() {
 function getAllAsAdmin(){
     startProgress();
     let XHR = new XMLHttpRequest();
-    let url = serverUrl + '/gossip/all';
+    let url = serverUrl + '/admin/gossip/all';
     XHR.open('get', url, 'true');
     XHR.send();
     XHR.onload = function(res) {
         let getAllResponse = JSON.parse(res.target.response);
-        GossipArray = (getAllResponse.gossips)
-        render(GossipArray);
-        console.log(GossipArray);
+        AdminGossipArray = (getAllResponse.gossips)
+        render(AdminGossipArray);
+        console.log(AdminGossipArray);
     }
 }
 
@@ -330,7 +347,13 @@ function renderOne(gossip) {
     var cardColor,
         karmaColor,
         textColor,
-        karmaSign;
+        karmaSign,
+        status = " ";
+    if (checkIfAdmin()) {
+        if (gossip.id_gossip_status == 0){
+            status = "(Eliminado)";
+        }
+    }
 
     if (black == false) {
         cardColor = 'lighten-2';
@@ -354,6 +377,10 @@ function renderOne(gossip) {
         karmaColor = "grey darken-4";
         karmaSign = "";
     }
+    let statu = document.createElement("p");
+    statu.innerHTML = " " + status;
+    statu.style.color = "red";
+    statu.style.float = "right"
 
     let gossipCard = document.createElement("div");
     gossipCard.className = "card grey " + cardColor + " hoverable";
@@ -400,6 +427,7 @@ function renderOne(gossip) {
     cardAction.appendChild(posKarma);
     cardAction.appendChild(negKarma);
     cardAction.appendChild(chip);
+    cardTitle.appendChild(statu);
     divRow.appendChild(cardTitle);
     divRow.appendChild(closeButton);
     cardContent.appendChild(divRow);
@@ -413,12 +441,28 @@ function renderOne(gossip) {
 //-------------------------------------------------------------------------Button functions-----------------------------------------------------------------------
 
 function enterAsAnotherUser() {
+    if (checkIfAdmin()) {
+        ls.removeItem('adminCredentials');
+    }
     ls.removeItem('username');
     window.location.assign("/");
 }
 EnterAsAnotherUserButtonM.onclick = enterAsAnotherUser;
 
+function enterAsAdmin(){
+    ls.removeItem('username');
+    window.location.assign("/admin")
+}
+
 //-------------------------------------------------------------------------Main Thread----------------------------------------------------------------------------
 
-getAllGossips();
-userChip();
+function init(){
+    if (checkIfAdmin()) {
+        getAllAsAdmin();
+        adminChip();
+    } else {
+        getAllGossips();
+        userChip();
+    }
+}
+init();

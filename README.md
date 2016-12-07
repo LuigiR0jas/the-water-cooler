@@ -14,11 +14,11 @@ Marcos:
 
 #De la funcionalidad agregada:
 Luigi:
--Ver gossips de todos los usuarios (admin)
+<!-- -Ver gossips de todos los usuarios (admin) -->
 
 Marcos:
--Escoger un nombre y ver los logs de la aplicación.
--Eliminar un gossip y recuperarlo
+-Ver los logs de la aplicación.
+-Eliminar un gossip y recuperarlo.
 
 
 
