@@ -142,24 +142,57 @@ function createGossip() {
 }
 publishGossipBtn.onclick = createGossip;
 
+function setKarma(action, id) {
+    let XHR = new XMLHttpRequest(),
+        url = serverUrl + '/gossip/' + action,
+        user = getUser();
+    params = {
+        id_usuario: getUser(),
+        id_gossip: id
+    };
+    XHR.open('post', url, 'true');
+    XHR.setRequestHeader('Content-Type', 'application/json');
+    XHR.send(JSON.stringify(params));
+    XHR.onload = function(res) {
+        let karmaResponse = JSON.parse(res.target.response);
+        renderKarma(action, id);
+        Materialize.toast(karmaResponse.message, 2000);
+    }
+}
+
+function getLogs() {
+    let XHR = new XMLHttpRequest();
+    let url = serverUrl + '/admin/log/all';
+    XHR.open('get', url, 'true');
+    XHR.send();
+    XHR.onload = function(res) {
+        console.log(res);
+        let getAllLogsResponse = JSON.parse(res.target.response);
+        LogsArray = (getAllLogsResponse.logs)
+        renderLogs(LogsArray);
+        console.log(LogsArray);
+    }
+}
+
 //----------------------------------------------------------------------Various functions-------------------------------------------------------------------------
 
-function buttonsRenders(){
+function buttonsRenders() {
     if (checkIfAdmin()) {
         var EnterAsAnotherUserButtonM = document.getElementById('EnterAsAnotherUserButtonM'),
-        EnterAsAdminButtonM = document.getElementById('EnterAsAdminButtonM');
+            EnterAsAdminButtonM = document.getElementById('EnterAsAdminButtonM');
 
-        EnterAsAnotherUserButtonM.style.display="none";
-        EnterAsAdminButtonM.style.display="none"
+        EnterAsAnotherUserButtonM.style.display = "none";
+        EnterAsAdminButtonM.style.display = "none"
 
     } else {
         var ReadLogsButtonM = document.getElementById('ReadLogsButtonM'),
-        EnterAsUserButtonM = document.getElementById('EnterAsUserButtonM');
+            EnterAsUserButtonM = document.getElementById('EnterAsUserButtonM');
 
-        ReadLogsButtonM.style.display="none";
-        EnterAsUserButtonM.style.display="none";
+        ReadLogsButtonM.style.display = "none";
+        EnterAsUserButtonM.style.display = "none";
     }
 }
+
 function searching() {
     let userSearchResult = [],
         contentSearchResult = [],
@@ -373,6 +406,44 @@ function getGossipByID(id) {
     }
 }
 
+function karma(k) {
+    console.log(this);
+    let idArr = this.id.split("_");
+    console.log(idArr[0], 'for ', idArr[1]);
+    setKarma(idArr[0], idArr[1])
+}
+
+function renderKarma(action, id) {
+    let string = "chip_" + id;
+    console.log(string);
+    let chip = document.getElementById(string),
+        karmaColor,
+        karmaSign = '';
+    raw = chip.innerHTML;
+    console.log(raw);
+    value = parseInt(raw);
+    console.log(value);
+
+    if(action == "up"){
+        value++;
+    } else {
+        value--;
+    }
+
+    if (value > 0) {
+        karmaColor = "cyan";
+        karmaSign = "+";
+
+    } else if (value < 0) {
+        karmaColor = "red";
+
+    } else {
+        karmaColor = "grey darken-2"
+    }
+    chip.innerHTML = karmaSign + "" + value;
+    chip.className = "chip " + karmaColor + " white-text";
+}
+
 function render(gossip) {
     gossipSpawner.innerHTML = 　'';
     for (var i = 0; i < gossip.length; i++) {
@@ -452,17 +523,20 @@ function renderOne(gossip) {
     let posKarma = document.createElement("a");
     posKarma.className = "waves-effect white-text cyan btn-large"
     posKarma.innerHTML = '<i class="material-icons">exposure_plus_1</i>'
-    posKarma.id = "posKarma_" + gossip.id_gossip;
+    posKarma.id = "up_" + gossip.id_gossip;
+    posKarma.onclick = karma;
 
     let negKarma = document.createElement("a");
     negKarma.className = "waves-effect white-text red btn-large"
     negKarma.innerHTML = '<i class="material-icons">exposure_minus_1</i>'
-    negKarma.id = "negKarma_" + gossip.id_gossip;
+    negKarma.id = "down_" + gossip.id_gossip;
+    negKarma.onclick = karma;
 
     let chip = document.createElement("div");
     chip.className = "chip " + karmaColor + " white-text";
+    chip.id = "chip_" + gossip.id_gossip;
     chip.innerHTML = karmaSign + gossip.ka_gossip;
-
+    //--------------------------------Append Hell -------------------------------------
     cardAction.appendChild(posKarma);
     cardAction.appendChild(negKarma);
     cardAction.appendChild(chip);
