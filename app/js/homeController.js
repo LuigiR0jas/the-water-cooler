@@ -4,6 +4,7 @@
 var gossipSpawner = document.getElementById('gossipSpawner'),
     EnterAsUserButtonM = document.getElementById('EnterAsUserButtonM'),
     EnterAsAdminButtonM = document.getElementById('EnterAsAdminButtonM'),
+    ReadLogsButtonM = document.getElementById('ReadLogsButtonM'),
     gossipText = document.getElementById('gossipText'),
     publishGossipBtn = document.getElementById('PublishGossipBtn'),
     ls = window.localStorage,
@@ -12,7 +13,8 @@ var gossipSpawner = document.getElementById('gossipSpawner'),
     GossipArray = [],
     AdminGossipArray = [],
     banner, progress, indeterminate, lel,
-    black = false;
+    black = false,
+    pollingWorker = new Worker("/polling");
 
 // -------------------------------------------------------------------Initial Functions--------------------------------------------------------------
 
@@ -73,7 +75,8 @@ function getAllGossips() {
         let getAllResponse = JSON.parse(res.target.response);
         GossipArray = (getAllResponse.gossips)
         render(GossipArray);
-        console.log(GossipArray);
+        pollingWorker.postMessage([GossipArray, "user"]);
+        console.log("GossipArray sent to worker");
     }
 }
 
@@ -87,13 +90,15 @@ function getAllAsAdmin() {
         let getAllResponse = JSON.parse(res.target.response);
         AdminGossipArray = (getAllResponse.gossips)
         render(AdminGossipArray);
-        console.log(AdminGossipArray);
+        pollingWorker.postMessage([AdminGossipArray, "admin"]);
+        console.log("GossipArray sent to worker");
     }
 }
 
 function eraseGossipSelf(id, user) {
-    let XHR = new XMLHttpRequest();
-    let url = serverUrl + '/gossip/delete?id_gossip=' + id + '&id_usuario=' + user;
+    let XHR = new XMLHttpRequest(),
+        tuser = getUser(),
+        url = serverUrl + '/gossip/delete?id_gossip=' + id + '&id_usuario=' + tuser;
     XHR.open('get', url, 'true');
     XHR.send();
     XHR.onload = function(res) {
@@ -101,29 +106,58 @@ function eraseGossipSelf(id, user) {
         if (deleteResponse.status == 200) {
             if (checkIfAdmin()) {
                 let status = ["status", id].join("_"),
-                    userid =  getGossipUser(id),
+                    userid = getGossipUser(id),
                     dinamoID = ["Erase", id, userid].join("_"),
                     statu = document.getElementById(status),
                     dinamoButton = document.getElementById(dinamoID);
-                    console.log(dinamoButton);
-                    console.log(dinamoID);
-                    dinamoButton.name = "retrieveBtn";　
-                    dinamoButton.id = ["Retrieve", id].join("_");
-                    dinamoButton.innerHTML = '<i class="material-icons">loop</i>';
-                    dinamoButton.onclick = console.log('l');;
-                    statu.style.color = "red";
-                    statu.innerHTML = "(Eliminado)";
-                    Materialize.toast(deleteResponse.message, 2000);
+                console.log(dinamoButton);
+                console.log(dinamoID);
+                dinamoButton.name = "retrieveBtn";　
+                dinamoButton.id = ["Retrieve", id, user].join("_");
+                dinamoButton.innerHTML = '<i class="material-icons">loop</i>';
+                dinamoButton.onclick = extractId;
+                statu.style.color = "red";
+                statu.innerHTML = "(Eliminado)";
+                statu.id = ["status", id].join("_")
+                Materialize.toast(deleteResponse.message, 2000);
             } else {
                 let cardId = ["Card", id, user].join("_"),
-                gossipCardo = document.getElementById(cardId),
-                index = getIndexOfGossip(id);
+                    gossipCardo = document.getElementById(cardId),
+                    index = getIndexOfGossip(id);
                 GossipArray.splice(index, 1);
                 gossipCardo.style.display = "none";
                 Materialize.toast(deleteResponse.message, 2000);
             }
         } else {
             Materialize.toast('A ' + deleteResponse.status + ' error ocurred: ' + deleteResponse.message, 2000);
+        }
+    }
+}
+
+function eraseGossip(id, user) {
+    let XHR = new XMLHttpRequest(),
+        tuser = getUser(),
+        url = serverUrl + '/admin/gossip/delete?id_gossip=' + id + '&id_usuario=' + tuser;
+    XHR.open('get', url, 'true');
+    XHR.send();
+    XHR.onload = function(res) {
+        deleteResponse = JSON.parse(res.target.response);
+        if (deleteResponse.status == 200) {
+            let status = ["status", id].join("_"),
+                userid = getGossipUser(id),
+                dinamoID = ["Erase", id, user].join("_"),
+                statu = document.getElementById(status),
+                dinamoButton = document.getElementById(dinamoID);
+            console.log(dinamoButton);
+            console.log(dinamoID);
+            dinamoButton.name = "retrieveBtn";　
+            dinamoButton.id = ["Retrieve", id, user].join("_");
+            dinamoButton.innerHTML = '<i class="material-icons">loop</i>';
+            dinamoButton.onclick = extractId;
+            statu.style.color = "red";
+            statu.innerHTML = "(Eliminado)";
+            statu.id = ["status", id].join("_")
+            Materialize.toast(deleteResponse.message, 2000);
         }
     }
 }
@@ -135,8 +169,12 @@ function createGossip() {
         Materialize.toast('*snoozes*..."Ummm.. well, yeah. I have something else to do."', 2000)
     } else {
         let XHR = new XMLHttpRequest(),
-            url = serverUrl + '/gossip/create',
-            user = getUser();
+            url = serverUrl + '/gossip/create';
+        if (checkIfAdmin()) {
+            var user = getAdmin();
+        } else {
+            var user = getUser();
+        }
         params = {
             id_usuario: user,
             de_gossip: gossipText.value
@@ -148,7 +186,7 @@ function createGossip() {
             let createResponse = JSON.parse(res.target.response);
             newGossip = createResponse.gossip;
             renderOne(newGossip);
-            if (checkIfAdmin) {
+            if (checkIfAdmin()) {
                 AdminGossipArray.push(newGossip)
             } else {
                 GossipArray.push(newGossip)
@@ -161,10 +199,14 @@ publishGossipBtn.onclick = createGossip;
 
 function setKarma(action, id) {
     let XHR = new XMLHttpRequest(),
-        url = serverUrl + '/gossip/' + action,
-        user = getUser();
+        url = serverUrl + '/gossip/' + action;
+    if (checkIfAdmin()) {
+        var user = getAdmin();
+    } else {
+        var user = getUser();
+    }
     params = {
-        id_usuario: getUser(),
+        id_usuario: user,
         id_gossip: id
     };
     XHR.open('post', url, 'true');
@@ -183,14 +225,39 @@ function getLogs() {
     XHR.open('get', url, 'true');
     XHR.send();
     XHR.onload = function(res) {
-        console.log(res);
         let getAllLogsResponse = JSON.parse(res.target.response);
         LogsArray = (getAllLogsResponse.logs)
         renderLogs(LogsArray);
-        console.log(LogsArray);
     }
 }
 
+function recoverGossip(id, idUsuario) {
+    let XHR = new XMLHttpRequest(),
+        url = serverUrl + '/admin/gossip/recover',
+        user = getAdmin();
+    params = {
+        id_usuario: user,
+        id_gossip: id
+    };
+    XHR.open('post', url, 'true');
+    XHR.setRequestHeader('Content-Type', 'application/json');
+    XHR.send(JSON.stringify(params));
+    XHR.onload = function(res) {
+        let recoverResponse = JSON.parse(res.target.response),
+            dinamoID = ["Retrieve", id, idUsuario].join('_');
+        console.log(dinamoID);
+        let dinamoButton = document.getElementById(dinamoID),
+            status = ["status", id].join("_");
+        let statu = document.getElementById(status);
+        statu.innerHTML = " ";
+        statu.id = ["status", id].join("_");
+        dinamoButton.name = "EraseBtn"
+        dinamoButton.id = ["Erase", id, idUsuario].join("_");
+        dinamoButton.innerHTML = '<i class="material-icons">close</i>';
+        dinamoButton.onclick = eraseMiddleware;
+        Materialize.toast(recoverResponse.message, 2000);
+    }
+}
 //----------------------------------------------------------------------Various functions-------------------------------------------------------------------------
 
 function buttonsRenders() {
@@ -405,13 +472,9 @@ function getIndexOfGossip(id) {
     }
 }
 
-function checkIfUserGossip() {
+function extractId() {
     let idArr = this.id.split("_");
-    if (ls.getItem('username') == idArr[2] || checkIfAdmin()) {
-        eraseGossipSelf(idArr[1], idArr[2]);
-    } else {
-        Materialize.toast("Nice try. That's not your gossip, pal.", 2000);
-    }
+    recoverGossip(idArr[1], idArr[2]);
 }
 
 function getGossipByID(id) {
@@ -428,11 +491,34 @@ function getGossipByID(id) {
     }
 }
 
+function eraseMiddleware() {
+    let idArr = this.id.split("_");
+    if (checkIfAdmin()) {
+        eraseGossip(idArr[1], idArr[2]);
+    } else {
+        eraseGossipSelf(idArr[1], idArr[2]);
+    }
+}
+
 function karma(k) {
+    console.log(k);
     console.log(this);
     let idArr = this.id.split("_");
     console.log(idArr[0], 'for ', idArr[1]);
     setKarma(idArr[0], idArr[1])
+}
+
+//---------------------------------------------------------------------------Render Functions -------------------------------------------------------------------------
+function renderLogs(logs) {
+    var logSpawner = document.getElementById("LogSpawner");
+    for (var i = 0; i < logs.length; i++) {
+        let p = document.createElement("p"),
+            divider = document.createElement("div")
+        p.innerHTML = "[Entrada No. " + logs[i].id_gossip_log + ", " + logs[i].da_gossip_log + "]: " + logs[i].de_gossip_log;
+        divider.className = "divider";
+        logSpawner.appendChild(p);
+        logSpawner.appendChild(divider);
+    }
 }
 
 function renderKarma(action, id) {
@@ -465,9 +551,13 @@ function renderKarma(action, id) {
 
 function render(gossip) {
     gossipSpawner.innerHTML = 　'';
-    for (var i = 0; i < gossip.length; i++) {
-        renderOne(gossip[i]);
-        if (i < gossip.length) {
+    var newArray = gossip.sort(function(a, b) {
+        return b.id_gossip - a.id_gossip;
+    });
+
+    for (var i = 0; i < newArray.length; i++) {
+        renderOne(newArray[i]);
+        if (i < newArray.length) {
             stopProgress();
         }
     }
@@ -479,9 +569,11 @@ function renderOne(gossip) {
         textColor,
         karmaSign,
         none = false,
+        yeah = false,
         status = " ";
 
     if (checkIfAdmin()) {
+        yeah = true;
         if (gossip.id_gossip_status == 0) {
             status = "(Eliminado)";
             none = true;
@@ -538,12 +630,12 @@ function renderOne(gossip) {
         dinamoButton.name = "retrieveBtn"
         dinamoButton.id = ["Retrieve", gossip.id_gossip, gossip.id_usuario].join("_");
         dinamoButton.innerHTML = '<i class="material-icons">loop</i>';
-        dinamoButton.onclick = console.log('l');;
+        dinamoButton.onclick = extractId;
     } else {
         dinamoButton.name = "EraseBtn"
         dinamoButton.id = ["Erase", gossip.id_gossip, gossip.id_usuario].join("_");
         dinamoButton.innerHTML = '<i class="material-icons">close</i>';
-        dinamoButton.onclick = checkIfUserGossip;
+        dinamoButton.onclick = eraseMiddleware;
     }
 
 
@@ -616,5 +708,10 @@ function init() {
         userChip();
     }
     buttonsRenders();
+    getLogs();
+    pollingWorker.onmessage = function(oEvent) {
+        console.log("Called back by worker");
+        console.log(oEvent);
+    }
 }
 init();

@@ -38,6 +38,10 @@ app.get('/admin', function(req, res) {
     res.sendFile(path.join(__dirname + '/app/admin.html'));
 });
 
+app.get('/polling', function(req, res) {
+    res.sendFile(path.join(__dirname + '/app/js/polling.js'));
+});
+
 //We tell our express app which port we're going to work with.
 app.listen(port);
 

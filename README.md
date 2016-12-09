@@ -16,10 +16,10 @@ Marcos:
 Luigi:
 <!-- -Ver gossips de todos los usuarios (admin) -->
 <!-- -Eliminar un gossip -->
+<!-- -Ver los logs de la aplicación. -->
+<!-- -Recuperar un gossip. -->
 
 Marcos:
--Ver los logs de la aplicación.
--Recuperar un gossip.
 
 
 
