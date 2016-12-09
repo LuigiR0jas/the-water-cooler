@@ -15,16 +15,17 @@ Marcos:
 #De la funcionalidad agregada:
 Luigi:
 <!-- -Ver gossips de todos los usuarios (admin) -->
+<!-- -Eliminar un gossip -->
 
 Marcos:
-<!-- -Ver los logs de la aplicación. -->
--Eliminar un gossip y recuperarlo.
+-Ver los logs de la aplicación.
+-Recuperar un gossip.
 
 
 
 #Requerimientos opcionales:
 Luigi:
-<!-- -Busqueda FUCK YEAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH-->
+<!-- -Busqueda-->
 
 Marcos:
 -Actualización de los gossip con Workers

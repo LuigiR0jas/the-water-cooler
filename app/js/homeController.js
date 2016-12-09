@@ -99,12 +99,29 @@ function eraseGossipSelf(id, user) {
     XHR.onload = function(res) {
         deleteResponse = JSON.parse(res.target.response);
         if (deleteResponse.status == 200) {
-            let cardId = ["Card", id, user].join("_"),
+            if (checkIfAdmin()) {
+                let status = ["status", id].join("_"),
+                    userid =  getGossipUser(id),
+                    dinamoID = ["Erase", id, userid].join("_"),
+                    statu = document.getElementById(status),
+                    dinamoButton = document.getElementById(dinamoID);
+                    console.log(dinamoButton);
+                    console.log(dinamoID);
+                    dinamoButton.name = "retrieveBtn";　
+                    dinamoButton.id = ["Retrieve", id].join("_");
+                    dinamoButton.innerHTML = '<i class="material-icons">loop</i>';
+                    dinamoButton.onclick = console.log('l');;
+                    statu.style.color = "red";
+                    statu.innerHTML = "(Eliminado)";
+                    Materialize.toast(deleteResponse.message, 2000);
+            } else {
+                let cardId = ["Card", id, user].join("_"),
                 gossipCardo = document.getElementById(cardId),
                 index = getIndexOfGossip(id);
-            GossipArray.splice(index, 1);
-            gossipCardo.style.display = "none";
-            Materialize.toast(deleteResponse.message, 2000);
+                GossipArray.splice(index, 1);
+                gossipCardo.style.display = "none";
+                Materialize.toast(deleteResponse.message, 2000);
+            }
         } else {
             Materialize.toast('A ' + deleteResponse.status + ' error ocurred: ' + deleteResponse.message, 2000);
         }
@@ -368,9 +385,14 @@ function searchGossipByKarma(arg) {
 }
 
 function getGossipUser(id) {
-    for (var i = 0; i < GossipArray.length; i++) {
-        if (GossipArray[i].id_gossip == id) {
-            return GossipArray[i].id_usuario;
+    if (checkIfAdmin()) {
+        var arr = AdminGossipArray;
+    } else {
+        var arr = GossipArray
+    }
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i].id_gossip == id) {
+            return arr[i].id_usuario;
         }
     }
 }
@@ -385,7 +407,7 @@ function getIndexOfGossip(id) {
 
 function checkIfUserGossip() {
     let idArr = this.id.split("_");
-    if (ls.getItem('username') == idArr[2]) {
+    if (ls.getItem('username') == idArr[2] || checkIfAdmin()) {
         eraseGossipSelf(idArr[1], idArr[2]);
     } else {
         Materialize.toast("Nice try. That's not your gossip, pal.", 2000);
@@ -419,12 +441,9 @@ function renderKarma(action, id) {
     let chip = document.getElementById(string),
         karmaColor,
         karmaSign = '';
-    raw = chip.innerHTML;
-    console.log(raw);
-    value = parseInt(raw);
-    console.log(value);
+    value = parseInt(chip.innerHTML);
 
-    if(action == "up"){
+    if (action == "up") {
         value++;
     } else {
         value--;
@@ -459,10 +478,13 @@ function renderOne(gossip) {
         karmaColor,
         textColor,
         karmaSign,
+        none = false,
         status = " ";
+
     if (checkIfAdmin()) {
         if (gossip.id_gossip_status == 0) {
             status = "(Eliminado)";
+            none = true;
         }
     }
 
@@ -488,7 +510,9 @@ function renderOne(gossip) {
         karmaColor = "grey darken-4";
         karmaSign = "";
     }
+
     let statu = document.createElement("p");
+    statu.id = "status_" + gossip.id_gossip;
     statu.innerHTML = " " + status;
     statu.style.color = "red";
     statu.style.float = "right"
@@ -507,12 +531,21 @@ function renderOne(gossip) {
     cardTitle.className = "card-title col"
     cardTitle.innerHTML = gossip.id_usuario + ":";
 
-    let closeButton = document.createElement("a");
-    closeButton.className = "waves-effect btn-flat " + textColor + " right EraseBtn";
-    closeButton.innerHTML = '<i class="material-icons">close</i>';
-    closeButton.id = ["Erase", gossip.id_gossip, gossip.id_usuario].join("_");
-    closeButton.name = "EraseBtn"
-    closeButton.onclick = checkIfUserGossip;
+    let dinamoButton = document.createElement("a");
+    dinamoButton.className = "waves-effect btn-flat " + textColor + " right EraseBtn";
+
+    if (none) {
+        dinamoButton.name = "retrieveBtn"
+        dinamoButton.id = ["Retrieve", gossip.id_gossip, gossip.id_usuario].join("_");
+        dinamoButton.innerHTML = '<i class="material-icons">loop</i>';
+        dinamoButton.onclick = console.log('l');;
+    } else {
+        dinamoButton.name = "EraseBtn"
+        dinamoButton.id = ["Erase", gossip.id_gossip, gossip.id_usuario].join("_");
+        dinamoButton.innerHTML = '<i class="material-icons">close</i>';
+        dinamoButton.onclick = checkIfUserGossip;
+    }
+
 
     let gossipContent = document.createElement("p");
     gossipContent.innerHTML = gossip.de_gossip;
@@ -536,19 +569,20 @@ function renderOne(gossip) {
     chip.className = "chip " + karmaColor + " white-text";
     chip.id = "chip_" + gossip.id_gossip;
     chip.innerHTML = karmaSign + gossip.ka_gossip;
+
     //--------------------------------Append Hell -------------------------------------
+
     cardAction.appendChild(posKarma);
     cardAction.appendChild(negKarma);
     cardAction.appendChild(chip);
     cardTitle.appendChild(statu);
     divRow.appendChild(cardTitle);
-    divRow.appendChild(closeButton);
+    divRow.appendChild(dinamoButton);
     cardContent.appendChild(divRow);
     cardContent.appendChild(gossipContent);
     gossipCard.appendChild(cardContent);
     gossipCard.appendChild(cardAction)
     gossipSpawner.appendChild(gossipCard);
-
 }
 
 //-------------------------------------------------------------------------Button functions-----------------------------------------------------------------------
